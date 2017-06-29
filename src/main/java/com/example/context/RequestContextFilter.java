@@ -30,7 +30,7 @@ public class RequestContextFilter implements WebFilter {
 		// add request context
 		return chain.filter(exchange)
 		            //should become ".contextInit(ServerWebExchange.class, exchange)
-		            .transform(m -> new MonoWebExchangeContext(m, exchange));
+		            .contextMap(ctx -> ctx.put(ServerWebExchange.class, exchange));
 	}
 
 }
