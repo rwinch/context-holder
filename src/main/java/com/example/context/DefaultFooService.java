@@ -28,10 +28,9 @@ public class DefaultFooService implements FooService {
 		// access request context
 		return Mono.just("foo-" + id)
 		           //should become contextExtract((data, ctx) -> )
-		           .contextMap((old, next) -> {
-			           System.out.println(old.get(ServerWebExchange.class));
-			           System.out.println(next);
-			           return old;
+		           .contextMap(ctx -> {
+			           System.out.println(ctx.get(ServerWebExchange.class).getAttributes());
+			           return ctx;
 		           })
 		           .log();
 	}
