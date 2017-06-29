@@ -18,14 +18,22 @@ package com.example.context;
 import reactor.core.publisher.Mono;
 
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ServerWebExchange;
 
 @Service
 public class DefaultFooService implements FooService {
 
 	@Override
 	public Mono<String> getFoo(long id) {
-		// TODO: access request context
-		return Mono.just("foo-" + id);
+		// access request context
+		return Mono.just("foo-" + id)
+		           //should become contextExtract((data, ctx) -> )
+		           .contextMap((old, next) -> {
+			           System.out.println(old);
+			           System.out.println(next);
+			           return old;
+		           })
+		           .log();
 	}
 
 }

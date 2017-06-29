@@ -27,8 +27,10 @@ public class RequestContextFilter implements WebFilter {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
-		// TODO: add request context
-		return chain.filter(exchange);
+		// add request context
+		return chain.filter(exchange)
+		            //should become ".contextInit(ServerWebExchange.class, exchange)
+		            .transform(m -> new MonoWebExchangeContext(m, exchange));
 	}
 
 }
