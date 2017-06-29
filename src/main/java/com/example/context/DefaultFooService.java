@@ -29,7 +29,8 @@ public class DefaultFooService implements FooService {
 		return Mono.just("foo-" + id)
 		           .contextGet((data, ctx) -> data + ctx.get(ServerWebExchange.class)
 		                                                .getRequest()
-		                                                .getHeaders())
+		                                                .getHeaders()
+		                                                .get("User-Agent"))
 		           .log();
 	}
 
