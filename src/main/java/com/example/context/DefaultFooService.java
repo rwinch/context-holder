@@ -29,7 +29,7 @@ public class DefaultFooService implements FooService {
 		return Mono.just("foo-" + id)
 		           //should become contextExtract((data, ctx) -> )
 		           .contextMap((old, next) -> {
-			           System.out.println(old);
+			           System.out.println(old.get(ServerWebExchange.class));
 			           System.out.println(next);
 			           return old;
 		           })
