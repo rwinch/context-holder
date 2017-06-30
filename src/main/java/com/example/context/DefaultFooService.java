@@ -18,7 +18,6 @@ package com.example.context;
 import java.time.Duration;
 
 import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
 
 import org.springframework.stereotype.Service;
 
@@ -27,20 +26,17 @@ public class DefaultFooService implements FooService {
 
 	@Override
 	public Mono<String> getFoo(long id) {
-		return fetchData(id).contextGet(this::enrichResult).log();
+		return Mono.just("dummy")
+				.contextGet((s, context) -> context.get(ServiceInfo.class))
+				.flatMap(info -> invokeRemoteService(id, info));
 	}
 
-	// Simulate remote call
-	private Mono<String> fetchData(long id) {
-		return Mono.delay(Duration.ofSeconds(2)).map(l -> "id::" + id);
-	}
-
-	private String enrichResult(String result, Context context) {
-		ServiceInfo info = context.get(ServiceInfo.class);
-		return "request::" + info.getTraceId() +
+	private Mono<String> invokeRemoteService(long id, ServiceInfo info) {
+		return Mono.delay(Duration.ofSeconds(1)).map(aLong ->
+				"request::" + info.getTraceId() +
 				", user::" + info.getUser() +
 				", agent::" + info.getHeaders().getFirst("User-Agent") +
-				", " + result;
+				", id::" + id);
 	}
 
 }
