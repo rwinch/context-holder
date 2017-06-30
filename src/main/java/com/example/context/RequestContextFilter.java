@@ -30,7 +30,7 @@ public class RequestContextFilter implements WebFilter {
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
 
 		return chain.filter(exchange)
-				.contextMap(context -> {
+				.contextStart(context -> {
 					HttpHeaders headers = exchange.getRequest().getHeaders();
 					return context.put(ServiceInfo.class, new ServiceInfo(1L, "Joe", headers));
 				});
