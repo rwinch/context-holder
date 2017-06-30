@@ -26,9 +26,8 @@ public class DefaultFooService implements FooService {
 
 	@Override
 	public Mono<String> getFoo(long id) {
-		return Mono.just("dummy")
-				.contextGet((s, context) -> context.get(ServiceInfo.class))
-				.flatMap(info -> invokeRemoteService(id, info));
+		return Mono.currentContext()
+		           .flatMap(ctx -> invokeRemoteService(id, ctx.get(ServiceInfo.class)));
 	}
 
 	private Mono<String> invokeRemoteService(long id, ServiceInfo info) {
