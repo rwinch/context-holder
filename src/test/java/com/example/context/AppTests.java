@@ -8,7 +8,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class ApplicationTests {
+public class AppTests {
 
 	@Test
 	public void contextLoads() {

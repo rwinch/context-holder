@@ -15,23 +15,32 @@
  */
 package com.example.context;
 
+import java.time.Duration;
+
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
 
 @Service
 public class DefaultFooService implements FooService {
 
 	@Override
 	public Mono<String> getFoo(long id) {
-		// access request context
-		return Mono.just("foo-" + id)
-		           .contextGet((data, ctx) -> data + ctx.get(ServerWebExchange.class)
-		                                                .getRequest()
-		                                                .getHeaders()
-		                                                .get("User-Agent"))
-		           .log();
+		return fetchData(id).contextGet(this::enrichResult).log();
+	}
+
+	// Simulate remote call
+	private Mono<String> fetchData(long id) {
+		return Mono.delay(Duration.ofSeconds(2)).map(l -> "id::" + id);
+	}
+
+	private String enrichResult(String result, Context context) {
+		ServiceInfo info = context.get(ServiceInfo.class);
+		return "request::" + info.getTraceId() +
+				", user::" + info.getUser() +
+				", agent::" + info.getHeaders().getFirst("User-Agent") +
+				", " + result;
 	}
 
 }
