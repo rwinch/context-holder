@@ -22,17 +22,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-public class FooController {
+public class MessageController {
 
-	private final FooService fooService;
+	private final MessageService messageService;
 
-	public FooController(FooService fooService) {
-		this.fooService = fooService;
+	public MessageController(MessageService messageService) {
+		this.messageService = messageService;
 	}
 
-	@GetMapping("/foos/{id}")
-	Mono<String> getFoo(@PathVariable Long id) {
-		return this.fooService.getFoo(id);
+	@GetMapping("/messages/{id}")
+	Mono<Message> findById(@PathVariable Long id) {
+		return this.messageService.findById(id);
 	}
 
 }
