@@ -11,6 +11,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
 
+import java.util.Map;
+import java.util.function.Consumer;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.web.reactive.function.client.ExchangeFilterFunctions.basicAuthentication;
 
@@ -34,8 +37,7 @@ public class AppTests {
 	public void getMessageWhenMessageToJoeAndJoeRequestsThenFound() {
 		client.get()
 				.uri("/messages/1")
-				.attribute(ExchangeFilterFunctions.USERNAME_ATTRIBUTE, "rob")
-				.attribute(ExchangeFilterFunctions.PASSWORD_ATTRIBUTE, "rob")
+				.attributes(basicAuthenticationCredentials("rob", "rob"))
 				.exchange()
 				.expectStatus().isOk()
 				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
@@ -45,10 +47,29 @@ public class AppTests {
 	public void getMessageWhenMessageToRobAndJoeRequestsThenForbidden() {
 		client.get()
 				.uri("/messages/20")
-				.attribute(ExchangeFilterFunctions.USERNAME_ATTRIBUTE, "joe")
-				.attribute(ExchangeFilterFunctions.PASSWORD_ATTRIBUTE, "joe")
+				.attributes(basicAuthenticationCredentials("joe", "joe"))
 				.exchange()
 				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
 				.expectBody().isEmpty();
+	}
+
+	static BasicAuthenticationCredential basicAuthenticationCredentials(String username, String password) {
+		return new BasicAuthenticationCredential(username, password);
+	}
+
+	static class BasicAuthenticationCredential implements Consumer<Map<String,Object>> {
+		private final String username;
+		private final String password;
+
+		BasicAuthenticationCredential(String username, String password) {
+			this.username = username;
+			this.password = password;
+		}
+
+		@Override
+		public void accept(Map<String, Object> attributes) {
+			attributes.put(ExchangeFilterFunctions.USERNAME_ATTRIBUTE, username);
+			attributes.put(ExchangeFilterFunctions.PASSWORD_ATTRIBUTE, password);
+		}
 	}
 }
