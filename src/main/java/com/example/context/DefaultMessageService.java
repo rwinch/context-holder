@@ -23,9 +23,12 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
 
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Operators;
+import reactor.util.context.Context;
 
 import static java.awt.SystemColor.info;
 
@@ -40,18 +43,17 @@ public class DefaultMessageService implements MessageService {
 
 	@Override
 	public Mono<Message> findById(long id) {
-		return Mono.currentContext()
-					.flatMap(ctx -> {
-						ServiceInfo info = ctx.get(ServiceInfo.class);
-						return remoteFindById(id)
-								.handle( (m,sink) -> {
-									if(!info.getUser().equals(m.getTo())) {
-										sink.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied"));
-									} else {
-										sink.next(m);
-									}
-								});
-					});
+		return remoteFindById(id)
+				.handle( (m,sink) -> {
+					CoreSubscriber s = (CoreSubscriber) sink;
+					Context context = s.currentContext();
+					ServiceInfo info = context.get(ServiceInfo.class);
+					if(!info.getUser().equals(m.getTo())) {
+						sink.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied"));
+					} else {
+						sink.next(m);
+					}
+				});
 	}
 
 	private Mono<Message> remoteFindById(long id) {
