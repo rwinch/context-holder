@@ -47,7 +47,7 @@ public class AppTests {
 	public void getMessageWhenMessageToRobAndJoeRequestsThenForbidden() {
 		client.get()
 				.uri("/messages/20")
-				.attributes(basicAuthenticationCredentials("joe", "joe"))
+				.attributes(new BasicAuthenticationCredential("joe", "joe"))
 				.exchange()
 				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
 				.expectBody().isEmpty();
@@ -58,18 +58,32 @@ public class AppTests {
 	}
 
 	static class BasicAuthenticationCredential implements Consumer<Map<String,Object>> {
+		private static String ATTRIBUTE_NAME = BasicAuthenticationCredential.class.getName().concat(".ATTRIBUTE_NAME");
+
 		private final String username;
 		private final String password;
+
 
 		BasicAuthenticationCredential(String username, String password) {
 			this.username = username;
 			this.password = password;
 		}
 
+		public String getUsername() {
+			return username;
+		}
+
+		public String getPassword() {
+			return password;
+		}
+
 		@Override
 		public void accept(Map<String, Object> attributes) {
-			attributes.put(ExchangeFilterFunctions.USERNAME_ATTRIBUTE, username);
-			attributes.put(ExchangeFilterFunctions.PASSWORD_ATTRIBUTE, password);
+			attributes.put(ATTRIBUTE_NAME, this);
+		}
+
+		public static BasicAuthenticationCredential get(Map<String,Object> attributes) {
+			return (BasicAuthenticationCredential) attributes.get(ATTRIBUTE_NAME);
 		}
 	}
 }
