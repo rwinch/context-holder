@@ -10,11 +10,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunctions;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.web.reactive.function.client.ExchangeFilterFunctions.Credentials.basicAuthenticationCredentials;
 import static org.springframework.web.reactive.function.client.ExchangeFilterFunctions.basicAuthentication;
 
 @RunWith(SpringRunner.class)
@@ -47,43 +50,9 @@ public class AppTests {
 	public void getMessageWhenMessageToRobAndJoeRequestsThenForbidden() {
 		client.get()
 				.uri("/messages/20")
-				.attributes(new BasicAuthenticationCredential("joe", "joe"))
+				.attributes(basicAuthenticationCredentials("joe", "joe"))
 				.exchange()
 				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
 				.expectBody().isEmpty();
-	}
-
-	static BasicAuthenticationCredential basicAuthenticationCredentials(String username, String password) {
-		return new BasicAuthenticationCredential(username, password);
-	}
-
-	static class BasicAuthenticationCredential implements Consumer<Map<String,Object>> {
-		private static String ATTRIBUTE_NAME = BasicAuthenticationCredential.class.getName().concat(".ATTRIBUTE_NAME");
-
-		private final String username;
-		private final String password;
-
-
-		BasicAuthenticationCredential(String username, String password) {
-			this.username = username;
-			this.password = password;
-		}
-
-		public String getUsername() {
-			return username;
-		}
-
-		public String getPassword() {
-			return password;
-		}
-
-		@Override
-		public void accept(Map<String, Object> attributes) {
-			attributes.put(ATTRIBUTE_NAME, this);
-		}
-
-		public static BasicAuthenticationCredential get(Map<String,Object> attributes) {
-			return (BasicAuthenticationCredential) attributes.get(ATTRIBUTE_NAME);
-		}
 	}
 }
