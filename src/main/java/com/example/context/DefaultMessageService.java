@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.core.CoreSubscriber;
 import reactor.core.publisher.Mono;
@@ -45,14 +47,17 @@ public class DefaultMessageService implements MessageService {
 	public Mono<Message> findById(long id) {
 		return remoteFindById(id)
 				.handle( (m,sink) -> {
-					CoreSubscriber s = (CoreSubscriber) sink;
-					Context context = s.currentContext();
-					ServiceInfo info = context.get(ServiceInfo.class);
-					if(!info.getUser().equals(m.getTo())) {
-						sink.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied"));
-					} else {
-						sink.next(m);
-					}
+					Context context = sink.currentContext();
+					Mono<Authentication> user = context.get("USER");
+					user
+						.subscribe(authentication -> {
+							if(!authentication.getName().equals(m.getTo())) {
+								sink.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied"));
+							} else {
+								sink.next(m);
+							}
+						});
+					// FIXME if empty
 				});
 	}
 
