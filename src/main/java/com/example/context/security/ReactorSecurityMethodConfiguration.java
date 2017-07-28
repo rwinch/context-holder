@@ -69,14 +69,15 @@ public class ReactorSecurityMethodConfiguration {
 									invocation.getThis().getClass());
 					ExpressionBasedPreInvocationAdvice advice = new ExpressionBasedPreInvocationAdvice();
 
-					Context context = Mono.currentContext().block();
-					Mono<Authentication> user = context.get("USER");
-					boolean allowed = advice.before(user.block(), invocation,
-							(PreInvocationAttribute) attributes.iterator().next());
-					if(!allowed) {
-						throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied");
-					}
-					return invocation.proceed();
+					Mono<?> m =(Mono<?>)invocation.proceed();
+					return m.contextStart(context -> {
+						Mono<Authentication> user = context.get("USER");
+						boolean allowed = advice.before(user.block(), invocation, (PreInvocationAttribute)    attributes.iterator().next());
+						if(!allowed) {
+							throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied");
+						}
+						return context;
+					});
 				}
 			};
 		}
