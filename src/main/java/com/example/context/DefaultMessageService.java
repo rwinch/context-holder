@@ -51,7 +51,7 @@ public class DefaultMessageService implements MessageService {
 					Mono<Authentication> user = context.get("USER");
 					user
 						.subscribe(authentication -> {
-							if(!authentication.getName().equals(m.getTo())) {
+							if(!authentication.getName().equalsIgnoreCase(m.getTo())) {
 								sink.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied"));
 							} else {
 								sink.next(m);

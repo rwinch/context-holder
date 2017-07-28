@@ -40,7 +40,7 @@ public class AppTests {
 	public void getMessageWhenMessageToJoeAndJoeRequestsThenFound() {
 		client.get()
 				.uri("/messages/1")
-				.attributes(basicAuthenticationCredentials("rob", "rob"))
+				.attributes(basicAuthenticationCredentials("joe", "joe"))
 				.exchange()
 				.expectStatus().isOk()
 				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
