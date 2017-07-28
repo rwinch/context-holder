@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.server.ResponseStatusException;
@@ -43,22 +44,10 @@ public class DefaultMessageService implements MessageService {
 		messages.put(20L, new Message("Rob","Joe", "This is from Rob to Joe"));
 	}
 
+	@PreAuthorize("hasRole('USER')")
 	@Override
 	public Mono<Message> findById(long id) {
-		return remoteFindById(id)
-				.handle( (m,sink) -> {
-					Context context = sink.currentContext();
-					Mono<Authentication> user = context.get("USER");
-					user
-						.subscribe(authentication -> {
-							if(!authentication.getName().equalsIgnoreCase(m.getTo())) {
-								sink.error(new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied"));
-							} else {
-								sink.next(m);
-							}
-						});
-					// FIXME if empty
-				});
+		return remoteFindById(id);
 	}
 
 	private Mono<Message> remoteFindById(long id) {
