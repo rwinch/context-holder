@@ -16,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.expression.method.*;
+import org.springframework.security.access.intercept.aopalliance.MethodSecurityMetadataSourceAdvisor;
+import org.springframework.security.access.method.AbstractMethodSecurityMetadataSource;
 import org.springframework.security.access.method.MethodSecurityMetadataSource;
 import org.springframework.security.access.prepost.PostInvocationAttribute;
 import org.springframework.security.access.prepost.PreInvocationAttribute;
@@ -41,36 +43,19 @@ public class ReactorSecurityMethodConfiguration {
 
 	@Bean
 	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-	public ReactiveAdvisor methodSecurityInterceptor() throws Exception {
-		ExpressionBasedAnnotationAttributeFactory attributeFactory = new ExpressionBasedAnnotationAttributeFactory(
-				new DefaultMethodSecurityExpressionHandler());
-		PrePostAnnotationSecurityMetadataSource source = new PrePostAnnotationSecurityMetadataSource(attributeFactory);
-		return new ReactiveAdvisor(source);
+	public MethodSecurityMetadataSourceAdvisor methodSecurityInterceptor(AbstractMethodSecurityMetadataSource source) throws Exception {
+		return new MethodSecurityMetadataSourceAdvisor("securityMethodInterceptor", source, "methodMetadataSource");
 	}
 
-	static class ReactiveAdvisor extends AbstractPointcutAdvisor {
+	@Bean
+	public PrePostAnnotationSecurityMetadataSource methodMetadataSource() {
+		ExpressionBasedAnnotationAttributeFactory attributeFactory = new ExpressionBasedAnnotationAttributeFactory(
+				new DefaultMethodSecurityExpressionHandler());
+		return new PrePostAnnotationSecurityMetadataSource(attributeFactory);
+	}
 
-		private transient MethodSecurityMetadataSource attributeSource;
-
-		public ReactiveAdvisor(MethodSecurityMetadataSource attributeSource) {
-			this.attributeSource = attributeSource;
-		}
-
-		@Override public Pointcut getPointcut() {
-			return new MethodSecurityMetadataSourcePointcut();
-		}
-
-		@Override public Advice getAdvice() {
-			return new PrePostMethodInterceptor(attributeSource);
-		}
-
-		class MethodSecurityMetadataSourcePointcut extends StaticMethodMatcherPointcut
-				implements Serializable {
-			@SuppressWarnings("unchecked")
-			public boolean matches(Method m, Class targetClass) {
-				Collection attributes = attributeSource.getAttributes(m, targetClass);
-				return attributes != null && !attributes.isEmpty();
-			}
-		}
+	@Bean
+	public PrePostMethodInterceptor securityMethodInterceptor(AbstractMethodSecurityMetadataSource source) {
+		return new PrePostMethodInterceptor(source);
 	}
 }
