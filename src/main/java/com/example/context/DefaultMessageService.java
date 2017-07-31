@@ -40,8 +40,8 @@ public class DefaultMessageService implements MessageService {
 	private final Map<Long, Message> messages = new ConcurrentHashMap<>();
 
 	public DefaultMessageService() {
-		messages.put(1L, new Message("Joe","Rob", "This is from Joe to Rob"));
-		messages.put(20L, new Message("Rob","Joe", "This is from Rob to Joe"));
+		messages.put(1L, new Message("joe","rob", "This is from Joe to Rob"));
+		messages.put(20L, new Message("rob","joe", "This is from Rob to Joe"));
 	}
 
 	@PreAuthorize("hasRole('USER')")
