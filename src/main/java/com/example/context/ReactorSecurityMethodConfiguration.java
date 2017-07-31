@@ -7,9 +7,9 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Role;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.ExpressionBasedAnnotationAttributeFactory;
+import org.springframework.security.access.intercept.aopalliance.MethodSecurityMetadataSourceAdvisor;
 import org.springframework.security.access.method.AbstractMethodSecurityMetadataSource;
 import org.springframework.security.access.prepost.PrePostAnnotationSecurityMetadataSource;
-import org.springframework.security.authorization.method.MethodSecurityMetadataSourceAdvisor;
 import org.springframework.security.authorization.method.PrePostMethodInterceptor;
 
 /**
