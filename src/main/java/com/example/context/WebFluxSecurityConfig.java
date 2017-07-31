@@ -13,7 +13,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
  * @since 5.0
  */
 @EnableWebFluxSecurity
-public class SecurityConfig {
+public class WebFluxSecurityConfig {
 
 	@Bean
 	public SecurityWebFilterChain springSecurityFilter(HttpSecurity http) {

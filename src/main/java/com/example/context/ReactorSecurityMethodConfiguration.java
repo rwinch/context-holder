@@ -1,37 +1,16 @@
-package com.example.context.security;
+package com.example.context;
 
-import org.aopalliance.aop.Advice;
-import org.aopalliance.intercept.MethodInterceptor;
-import org.aopalliance.intercept.MethodInvocation;
-import org.reactivestreams.Publisher;
-import org.springframework.aop.Pointcut;
-import org.springframework.aop.support.AbstractPointcutAdvisor;
-import org.springframework.aop.support.StaticMethodMatcherPointcut;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Role;
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.expression.method.*;
-import org.springframework.security.access.intercept.aopalliance.MethodSecurityMetadataSourceAdvisor;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.ExpressionBasedAnnotationAttributeFactory;
 import org.springframework.security.access.method.AbstractMethodSecurityMetadataSource;
-import org.springframework.security.access.method.MethodSecurityMetadataSource;
-import org.springframework.security.access.prepost.PostInvocationAttribute;
-import org.springframework.security.access.prepost.PreInvocationAttribute;
 import org.springframework.security.access.prepost.PrePostAnnotationSecurityMetadataSource;
-import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.authorization.method.MethodSecurityMetadataSourceAdvisor;
 import org.springframework.security.authorization.method.PrePostMethodInterceptor;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.core.publisher.Mono;
-import reactor.util.context.Context;
-
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.Collection;
 
 /**
  * @author Rob Winch
