@@ -3,6 +3,7 @@ package com.example.context.security;
 import org.aopalliance.aop.Advice;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.reactivestreams.Publisher;
 import org.springframework.aop.Pointcut;
 import org.springframework.aop.support.AbstractPointcutAdvisor;
 import org.springframework.aop.support.StaticMethodMatcherPointcut;
@@ -14,10 +15,9 @@ import org.springframework.context.annotation.Role;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.ExpressionBasedAnnotationAttributeFactory;
-import org.springframework.security.access.expression.method.ExpressionBasedPreInvocationAdvice;
+import org.springframework.security.access.expression.method.*;
 import org.springframework.security.access.method.MethodSecurityMetadataSource;
+import org.springframework.security.access.prepost.PostInvocationAttribute;
 import org.springframework.security.access.prepost.PreInvocationAttribute;
 import org.springframework.security.access.prepost.PrePostAnnotationSecurityMetadataSource;
 import org.springframework.security.core.Authentication;
@@ -67,17 +67,24 @@ public class ReactorSecurityMethodConfiguration {
 					Collection<ConfigAttribute> attributes = attributeSource
 							.getAttributes(invocation.getMethod(),
 									invocation.getThis().getClass());
-					ExpressionBasedPreInvocationAdvice advice = new ExpressionBasedPreInvocationAdvice();
 
-					Mono<?> m =(Mono<?>)invocation.proceed();
-					return m.contextStart(context -> {
-						Mono<Authentication> user = context.get("USER");
-						boolean allowed = advice.before(user.block(), invocation, (PreInvocationAttribute)    attributes.iterator().next());
-						if(!allowed) {
-							throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Denied");
-						}
-						return context;
-					});
+					MethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+					ExpressionBasedPostInvocationAdvice advice = new ExpressionBasedPostInvocationAdvice(handler);
+
+					Mono<Object> result = (Mono<Object>) invocation.proceed();
+					return result.delaySubscription(Mono.currentContext().flatMap(ctx -> {
+								Mono<Authentication> user = ctx.get("USER");
+								PostInvocationAttribute attr = findPostInvocationAttribute(attributes);
+								return result.map(r -> {
+									System.out.println("hi");
+									Authentication auth = user.block();
+									return advice.after(auth, invocation, attr, r);
+//									return user.map( auth -> {
+//										System.out.println("Auth");
+//										return advice.after(auth, invocation, attr, r);
+//									});
+								});
+							}));
 				}
 			};
 		}
@@ -89,6 +96,18 @@ public class ReactorSecurityMethodConfiguration {
 				Collection attributes = attributeSource.getAttributes(m, targetClass);
 				return attributes != null && !attributes.isEmpty();
 			}
+		}
+
+
+		private PostInvocationAttribute findPostInvocationAttribute(
+				Collection<ConfigAttribute> config) {
+			for (ConfigAttribute attribute : config) {
+				if (attribute instanceof PostInvocationAttribute) {
+					return (PostInvocationAttribute) attribute;
+				}
+			}
+
+			return null;
 		}
 	}
 }

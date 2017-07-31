@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -44,7 +45,7 @@ public class DefaultMessageService implements MessageService {
 		messages.put(20L, new Message("rob","joe", "This is from Rob to Joe"));
 	}
 
-	@PreAuthorize("hasRole('USER')")
+	@PostAuthorize("returnObject.to == authentication?.name")
 	@Override
 	public Mono<Message> findById(long id) {
 		return remoteFindById(id);
