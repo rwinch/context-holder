@@ -2,9 +2,11 @@ package com.example.context;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.web.server.HttpSecurity;
 import org.springframework.security.core.userdetails.MapUserDetailsRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.server.SecurityWebFilterChain;
 
 /**
  * @author Rob Winch
@@ -13,6 +15,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 @EnableWebFluxSecurity
 public class SecurityConfig {
 
+	@Bean
+	public SecurityWebFilterChain springSecurityFilter(HttpSecurity http) {
+		return http
+				.build();
+	}
 
 	@Bean
 	public MapUserDetailsRepository userDetailsRepository() {
