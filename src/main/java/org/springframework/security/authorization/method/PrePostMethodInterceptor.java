@@ -33,21 +33,14 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 
 		MethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
 		ExpressionBasedPostInvocationAdvice advice = new ExpressionBasedPostInvocationAdvice(handler);
+		PostInvocationAttribute attr = findPostInvocationAttribute(attributes);
 
 		Mono<?> result = (Mono<?>) invocation.proceed();
-		return Mono.currentContext().flatMap(ctx -> {
-			Mono<Authentication> user = ctx.get("USER");
-			PostInvocationAttribute attr = findPostInvocationAttribute(attributes);
-			return result.flatMap(r -> {
-//				return advice.after(user.block(), invocation, attr, r);
-				return user
-						.map ( auth -> advice.after(auth, invocation, attr, r));
-				//									return user.map( auth -> {
-				//										System.out.println("Auth");
-				//										return advice.after(auth, invocation, attr, r);
-				//									});
-			});
-		});
+		return result.flatMap( r ->
+			Mono.currentContext()
+				.flatMap( cxt -> cxt.<Mono<Authentication>>get("USER"))
+				.map( auth -> advice.after(auth, invocation, attr, r))
+		);
 	}
 
 	private static PostInvocationAttribute findPostInvocationAttribute(
