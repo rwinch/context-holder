@@ -15,26 +15,12 @@
  */
 package com.example.context;
 
-import java.nio.file.AccessDeniedException;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.server.ResponseStatusException;
-import reactor.core.CoreSubscriber;
+import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import org.springframework.stereotype.Service;
-import reactor.core.publisher.Operators;
-import reactor.util.context.Context;
-
-import static java.awt.SystemColor.info;
+import java.time.Duration;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class DefaultMessageService implements MessageService {
@@ -45,7 +31,6 @@ public class DefaultMessageService implements MessageService {
 		messages.put(20L, new Message("rob","joe", "This is from Rob to Joe"));
 	}
 
-	@PostAuthorize("returnObject.to == authentication?.name")
 	@Override
 	public Mono<Message> findById(long id) {
 		return remoteFindById(id);
