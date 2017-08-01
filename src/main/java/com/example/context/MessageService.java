@@ -29,4 +29,9 @@ public interface MessageService {
 	@PostAuthorize("returnObject.to == authentication?.name")
 	Mono<Message> postAuthorizeFindById(long id);
 
+	@PreAuthorize("@authz.check(#id)")
+	Mono<Message> preAuthorizeBeanFindById(long id);
+
+	@PostAuthorize("@authz.check(authentication, returnObject)")
+	Mono<Message> postAuthorizeBeanFindById(long id);
 }

@@ -45,4 +45,13 @@ public class DefaultMessageService implements MessageService {
 		return findById(id);
 	}
 
+	@Override
+	public Mono<Message> preAuthorizeBeanFindById(long id) {
+		return findById(id);
+	}
+
+	@Override
+	public Mono<Message> postAuthorizeBeanFindById(long id) {
+		return findById(id);
+	}
 }

@@ -5,8 +5,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Role;
-import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
-import org.springframework.security.access.expression.method.ExpressionBasedAnnotationAttributeFactory;
+import org.springframework.security.access.expression.method.*;
 import org.springframework.security.access.intercept.aopalliance.MethodSecurityMetadataSourceAdvisor;
 import org.springframework.security.access.method.AbstractMethodSecurityMetadataSource;
 import org.springframework.security.access.prepost.PrePostAnnotationSecurityMetadataSource;
@@ -34,7 +33,21 @@ public class ReactorSecurityMethodConfiguration {
 	}
 
 	@Bean
-	public PrePostMethodInterceptor securityMethodInterceptor(AbstractMethodSecurityMetadataSource source) {
-		return new PrePostMethodInterceptor(source);
+	public PrePostMethodInterceptor securityMethodInterceptor(AbstractMethodSecurityMetadataSource source, MethodSecurityExpressionHandler handler) {
+
+		ExpressionBasedPostInvocationAdvice postAdvice = new ExpressionBasedPostInvocationAdvice(
+				handler);
+		ExpressionBasedPreInvocationAdvice preAdvice = new ExpressionBasedPreInvocationAdvice();
+		preAdvice.setExpressionHandler(handler);
+
+		PrePostMethodInterceptor result = new PrePostMethodInterceptor(source);
+		result.setPostAdvice(postAdvice);
+		result.setPreAdvice(preAdvice);
+		return result;
+	}
+
+	@Bean
+	public DefaultMethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+		return new DefaultMethodSecurityExpressionHandler();
 	}
 }

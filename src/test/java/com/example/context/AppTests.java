@@ -66,6 +66,26 @@ public class AppTests {
 	}
 
 	@Test
+	public void preAuthorizeBeanFindMessageByIdWhenEvenThenFound() {
+		client.get()
+				.uri("/preAuthorize/bean/messages/20")
+				.attributes(adminCredentials())
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
+	}
+
+	@Test
+	public void preAuthorizeBeanFindMessageByIdWhenOddThenForbidden() {
+		client.get()
+				.uri("/preAuthorize/bean/messages/1")
+				.attributes(joeCredentials())
+				.exchange()
+				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
+				.expectBody().isEmpty();
+	}
+
+	@Test
 	public void postAuthorizeFindMessageByIdWhenMessageToJoeAndJoeRequestsThenFound() {
 		client.get()
 				.uri("/postAuthorize/messages/1")
@@ -79,6 +99,26 @@ public class AppTests {
 	public void postAuthorizeFindMessageByIdWhenMessageToRobAndJoeRequestsThenForbidden() {
 		client.get()
 				.uri("/postAuthorize/messages/20")
+				.attributes(joeCredentials())
+				.exchange()
+				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
+				.expectBody().isEmpty();
+	}
+
+	@Test
+	public void postAuthorizeBeanFindMessageByIdWhenToJoeAndJoeRequestThenFound() {
+		client.get()
+				.uri("/postAuthorize/bean/messages/1")
+				.attributes(joeCredentials())
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
+	}
+
+	@Test
+	public void preAuthorizeBeanFindMessageByIdWhenToRobAndJoeRequestThenForbidden() {
+		client.get()
+				.uri("/postAuthorize/bean/messages/20")
 				.attributes(joeCredentials())
 				.exchange()
 				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)

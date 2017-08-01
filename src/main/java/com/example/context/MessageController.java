@@ -40,6 +40,16 @@ public class MessageController {
 		return this.messageService.preAuthorizeHasRoleFindById(id);
 	}
 
+	@GetMapping("/preAuthorize/bean/messages/{id}")
+	Mono<Message>preAuthorizeBeanFindById(@PathVariable Long id) {
+		return this.messageService.preAuthorizeBeanFindById(id);
+	}
+
+	@GetMapping("/postAuthorize/bean/messages/{id}")
+	Mono<Message>postAuthorizeBeanFindById(@PathVariable Long id) {
+		return this.messageService.postAuthorizeBeanFindById(id);
+	}
+
 	@GetMapping("/messages/{id}")
 	Mono<Message> findById(@PathVariable Long id) {
 		return this.messageService.findById(id);
