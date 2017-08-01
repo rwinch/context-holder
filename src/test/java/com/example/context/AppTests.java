@@ -40,17 +40,36 @@ public class AppTests {
 	public void findMessageByIdWhenNotAnnotatedThenFound() {
 		client.get()
 				.uri("/messages/1")
-				.attributes(basicAuthenticationCredentials("joe", "joe"))
 				.exchange()
 				.expectStatus().isOk()
 				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
 	}
 
 	@Test
+	public void preAuthorizeHasRoleFindMessageByIdWhenAdminThenFound() {
+		client.get()
+				.uri("/preAuthorize/hasRole/messages/1")
+				.attributes(adminCredentials())
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
+	}
+
+	@Test
+	public void preAuthorizeHasRoleFindMessageByIdWhenUserThenForbidden() {
+		client.get()
+				.uri("/preAuthorize/hasRole/messages/1")
+				.attributes(joeCredentials())
+				.exchange()
+				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
+				.expectBody().isEmpty();
+	}
+
+	@Test
 	public void postAuthorizeFindMessageByIdWhenMessageToJoeAndJoeRequestsThenFound() {
 		client.get()
 				.uri("/postAuthorize/messages/1")
-				.attributes(basicAuthenticationCredentials("joe", "joe"))
+				.attributes(joeCredentials())
 				.exchange()
 				.expectStatus().isOk()
 				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
@@ -60,9 +79,17 @@ public class AppTests {
 	public void postAuthorizeFindMessageByIdWhenMessageToRobAndJoeRequestsThenForbidden() {
 		client.get()
 				.uri("/postAuthorize/messages/20")
-				.attributes(basicAuthenticationCredentials("joe", "joe"))
+				.attributes(joeCredentials())
 				.exchange()
 				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)
 				.expectBody().isEmpty();
+	}
+
+	private Consumer<Map<String, Object>> adminCredentials() {
+		return basicAuthenticationCredentials("admin", "admin");
+	}
+
+	private Consumer<Map<String, Object>> joeCredentials() {
+		return basicAuthenticationCredentials("joe", "joe");
 	}
 }

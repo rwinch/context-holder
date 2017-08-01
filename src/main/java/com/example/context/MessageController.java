@@ -35,9 +35,14 @@ public class MessageController {
 		return this.messageService.postAuthorizeFindById(id);
 	}
 
+	@GetMapping("/preAuthorize/hasRole/messages/{id}")
+	Mono<Message>preAuthorizeHasRoleFindById(@PathVariable Long id) {
+		return this.messageService.preAuthorizeHasRoleFindById(id);
+	}
+
 	@GetMapping("/messages/{id}")
 	Mono<Message> findById(@PathVariable Long id) {
-		return this.messageService.postAuthorizeFindById(id);
+		return this.messageService.findById(id);
 	}
 
 }

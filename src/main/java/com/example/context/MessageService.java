@@ -16,11 +16,15 @@
 package com.example.context;
 
 import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.access.prepost.PreAuthorize;
 import reactor.core.publisher.Mono;
 
 public interface MessageService {
 
 	Mono<Message> findById(long id);
+
+	@PreAuthorize("hasRole('ADMIN')")
+	Mono<Message> preAuthorizeHasRoleFindById(long id);
 
 	@PostAuthorize("returnObject.to == authentication?.name")
 	Mono<Message> postAuthorizeFindById(long id);

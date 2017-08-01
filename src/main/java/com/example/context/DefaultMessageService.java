@@ -40,4 +40,9 @@ public class DefaultMessageService implements MessageService {
 		return Mono.justOrEmpty(this.messages.get(id));
 	}
 
+	@Override
+	public Mono<Message> preAuthorizeHasRoleFindById(long id) {
+		return findById(id);
+	}
+
 }
