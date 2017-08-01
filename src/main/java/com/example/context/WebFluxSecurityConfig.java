@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.MapUserDetailsRepository;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.context.SecurityReactorContextFilter;
 
 /**
  * @author Rob Winch
@@ -19,6 +20,11 @@ public class WebFluxSecurityConfig {
 	public SecurityWebFilterChain springSecurityFilter(HttpSecurity http) {
 		return http
 				.build();
+	}
+
+	@Bean
+	public SecurityReactorContextFilter securityReactorContextFilter() {
+		return new SecurityReactorContextFilter();
 	}
 
 	@Bean

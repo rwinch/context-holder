@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.example.context;
 
-import org.springframework.security.core.Authentication;
-import reactor.core.publisher.Mono;
+package org.springframework.security.web.server.context;
 
-import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
-@Component
-public class RequestContextFilter implements WebFilter {
+/**
+ * @since 5.0
+ * @author Rob Winch
+ */
+public class SecurityReactorContextFilter implements WebFilter {
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
