@@ -37,9 +37,9 @@ public class AppTests {
 	}
 
 	@Test
-	public void getMessageWhenMessageToJoeAndJoeRequestsThenFound() {
+	public void postAuthorizeFindMessageByIdWhenMessageToJoeAndJoeRequestsThenFound() {
 		client.get()
-				.uri("/messages/1")
+				.uri("/postAuthorize/messages/1")
 				.attributes(basicAuthenticationCredentials("joe", "joe"))
 				.exchange()
 				.expectStatus().isOk()
@@ -47,9 +47,9 @@ public class AppTests {
 	}
 
 	@Test
-	public void getMessageWhenMessageToRobAndJoeRequestsThenForbidden() {
+	public void postAuthorizeFindMessageByIdWhenMessageToRobAndJoeRequestsThenForbidden() {
 		client.get()
-				.uri("/messages/20")
+				.uri("/postAuthorize/messages/20")
 				.attributes(basicAuthenticationCredentials("joe", "joe"))
 				.exchange()
 				.expectStatus().isEqualTo(HttpStatus.FORBIDDEN)

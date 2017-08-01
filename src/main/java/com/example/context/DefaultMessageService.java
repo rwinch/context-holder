@@ -32,7 +32,7 @@ public class DefaultMessageService implements MessageService {
 	}
 
 	@Override
-	public Mono<Message> findById(long id) {
+	public Mono<Message> postAuthorizeFindById(long id) {
 		return remoteFindById(id);
 	}
 
