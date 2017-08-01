@@ -37,6 +37,16 @@ public class AppTests {
 	}
 
 	@Test
+	public void findMessageByIdWhenNotAnnotatedThenFound() {
+		client.get()
+				.uri("/messages/1")
+				.attributes(basicAuthenticationCredentials("joe", "joe"))
+				.exchange()
+				.expectStatus().isOk()
+				.expectBody(String.class).consumeWith( response -> assertThat(response.getResponseBody()).contains("Joe"));
+	}
+
+	@Test
 	public void postAuthorizeFindMessageByIdWhenMessageToJoeAndJoeRequestsThenFound() {
 		client.get()
 				.uri("/postAuthorize/messages/1")

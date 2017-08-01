@@ -18,7 +18,6 @@ package com.example.context;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -33,11 +32,12 @@ public class DefaultMessageService implements MessageService {
 
 	@Override
 	public Mono<Message> postAuthorizeFindById(long id) {
-		return remoteFindById(id);
+		return findById(id);
 	}
 
-	private Mono<Message> remoteFindById(long id) {
-		return Mono.delay(Duration.ofSeconds(1)).map(aLong -> messages.get(id));
+	@Override
+	public Mono<Message> findById(long id) {
+		return Mono.justOrEmpty(this.messages.get(id));
 	}
 
 }

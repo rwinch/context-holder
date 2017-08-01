@@ -20,6 +20,8 @@ import reactor.core.publisher.Mono;
 
 public interface MessageService {
 
+	Mono<Message> findById(long id);
+
 	@PostAuthorize("returnObject.to == authentication?.name")
 	Mono<Message> postAuthorizeFindById(long id);
 

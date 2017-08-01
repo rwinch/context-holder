@@ -35,4 +35,9 @@ public class MessageController {
 		return this.messageService.postAuthorizeFindById(id);
 	}
 
+	@GetMapping("/messages/{id}")
+	Mono<Message> findById(@PathVariable Long id) {
+		return this.messageService.postAuthorizeFindById(id);
+	}
+
 }
