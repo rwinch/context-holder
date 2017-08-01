@@ -1,3 +1,19 @@
+/*
+ * Copyright 2002-2017 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package org.springframework.security.authorization.method;
 
 import org.aopalliance.intercept.MethodInterceptor;
@@ -10,8 +26,11 @@ import org.springframework.security.access.expression.method.ExpressionBasedPreI
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.access.method.MethodSecurityMetadataSource;
 import org.springframework.security.access.prepost.PostInvocationAttribute;
+import org.springframework.security.access.prepost.PostInvocationAuthorizationAdvice;
 import org.springframework.security.access.prepost.PreInvocationAttribute;
+import org.springframework.security.access.prepost.PreInvocationAuthorizationAdvice;
 import org.springframework.security.core.Authentication;
+import org.springframework.util.Assert;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
@@ -24,8 +43,26 @@ import java.util.Collection;
 public class PrePostMethodInterceptor implements MethodInterceptor {
 	private final MethodSecurityMetadataSource attributeSource;
 
+	private PostInvocationAuthorizationAdvice postAdvice;
+
+	private PreInvocationAuthorizationAdvice preAdvice;
+
 	public PrePostMethodInterceptor(MethodSecurityMetadataSource attributeSource) {
 		this.attributeSource = attributeSource;
+
+		MethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+		this.postAdvice = new ExpressionBasedPostInvocationAdvice(handler);
+		this.preAdvice = new ExpressionBasedPreInvocationAdvice();
+	}
+
+	public void setPostAdvice(PostInvocationAuthorizationAdvice postAdvice) {
+		Assert.notNull(postAdvice, "postAdvice cannot be null");
+		this.postAdvice = postAdvice;
+	}
+
+	public void setPreAdvice(PreInvocationAuthorizationAdvice preAdvice) {
+		Assert.notNull(preAdvice, "preAdvice cannot be null");
+		this.preAdvice = preAdvice;
 	}
 
 	@Override
@@ -35,29 +72,21 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 				.getAttributes(invocation.getMethod(),
 						invocation.getThis().getClass());
 
-		MethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-		ExpressionBasedPostInvocationAdvice postAdvice = new ExpressionBasedPostInvocationAdvice(handler);
-		ExpressionBasedPreInvocationAdvice preAdvice = new ExpressionBasedPreInvocationAdvice();
-		preAdvice.setExpressionHandler(handler);
-
 		PreInvocationAttribute preAttr = findPreInvocationAttribute(attributes);
 		return Mono.currentContext()
 			.flatMap( cxt -> cxt.<Mono<Authentication>>get("USER"))
-			.filter( auth -> preAdvice.before(auth, invocation, preAttr))
+			.filter( auth -> this.preAdvice.before(auth, invocation, preAttr))
 			.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")))
 			.flatMap( auth -> invoke(auth, invocation, attributes));
 	}
 
 	private Mono<?> invoke(final Authentication auth, final MethodInvocation invocation, Collection<ConfigAttribute> attributes) {
-		MethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-		ExpressionBasedPostInvocationAdvice postAdvice = new ExpressionBasedPostInvocationAdvice(handler);
-
 		Mono<?> result = performInvoke(invocation);
 		PostInvocationAttribute attr = findPostInvocationAttribute(attributes);
 		if(attr == null) {
 			return result;
 		}
-		return result.map( r -> postAdvice.after(auth, invocation, attr, r));
+		return result.map( r -> this.postAdvice.after(auth, invocation, attr, r));
 	}
 
 	private Mono<?> performInvoke(final MethodInvocation invocation) {
