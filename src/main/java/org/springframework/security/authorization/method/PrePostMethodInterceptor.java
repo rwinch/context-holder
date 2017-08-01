@@ -76,7 +76,7 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 
 		PreInvocationAttribute preAttr = findPreInvocationAttribute(attributes);
 		return Mono.currentContext()
-			.flatMap( cxt -> cxt.<Mono<Authentication>>get("USER"))
+			.flatMap( cxt -> cxt.getOrDefault(Authentication.class, Mono.<Authentication>empty()))
 			.filter( auth -> this.preAdvice.before(auth, invocation, preAttr))
 			.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")))
 			.flatMap( auth -> invoke(auth, invocation, attributes));
