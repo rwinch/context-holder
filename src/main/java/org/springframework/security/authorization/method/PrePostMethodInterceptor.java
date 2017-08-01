@@ -34,6 +34,7 @@ import org.springframework.util.Assert;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 
 /**
@@ -68,9 +69,10 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 	@Override
 	public Object invoke(final MethodInvocation invocation)
 			throws Throwable {
-		Collection<ConfigAttribute> attributes = attributeSource
-				.getAttributes(invocation.getMethod(),
-						invocation.getThis().getClass());
+		Method method = invocation.getMethod();
+		Class<?> targetClass = invocation.getThis().getClass();
+		Collection<ConfigAttribute> attributes = this.attributeSource
+				.getAttributes(method, targetClass);
 
 		PreInvocationAttribute preAttr = findPreInvocationAttribute(attributes);
 		return Mono.currentContext()
