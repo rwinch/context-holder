@@ -41,30 +41,31 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 		preAdvice.setExpressionHandler(handler);
 
 		PreInvocationAttribute preAttr = findPreInvocationAttribute(attributes);
-		if(preAdvice != null) {
-			return Mono.currentContext()
-				.flatMap( cxt -> cxt.<Mono<Authentication>>get("USER"))
-				.filter( auth -> preAdvice.before(auth, invocation, preAttr))
-				.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")))
-				.flatMap( ctx -> {
-					try {
-						return (Mono<?>) invocation.proceed();
-					} catch(Throwable t) {
-						throw Exceptions.propagate(t);
-					}
-				});
-		}
+		return Mono.currentContext()
+			.flatMap( cxt -> cxt.<Mono<Authentication>>get("USER"))
+			.filter( auth -> preAdvice.before(auth, invocation, preAttr))
+			.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")))
+			.flatMap( auth -> invoke(auth, invocation, attributes));
+	}
 
-		Mono<?> result = (Mono<?>) invocation.proceed();
+	private Mono<?> invoke(final Authentication auth, final MethodInvocation invocation, Collection<ConfigAttribute> attributes) {
+		MethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+		ExpressionBasedPostInvocationAdvice postAdvice = new ExpressionBasedPostInvocationAdvice(handler);
+
+		Mono<?> result = performInvoke(invocation);
 		PostInvocationAttribute attr = findPostInvocationAttribute(attributes);
 		if(attr == null) {
 			return result;
 		}
-		return result.flatMap( r ->
-			Mono.currentContext()
-				.flatMap( cxt -> cxt.<Mono<Authentication>>get("USER"))
-				.map( auth -> postAdvice.after(auth, invocation, attr, r))
-		);
+		return result.map( r -> postAdvice.after(auth, invocation, attr, r));
+	}
+
+	private Mono<?> performInvoke(final MethodInvocation invocation) {
+		try {
+			return (Mono<?>) invocation.proceed();
+		} catch(Throwable throwable) {
+			throw Exceptions.propagate(throwable);
+		}
 	}
 
 	private static PostInvocationAttribute findPostInvocationAttribute(
