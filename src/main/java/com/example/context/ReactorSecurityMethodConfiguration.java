@@ -10,44 +10,13 @@ import org.springframework.security.access.intercept.aopalliance.MethodSecurityM
 import org.springframework.security.access.method.AbstractMethodSecurityMetadataSource;
 import org.springframework.security.access.prepost.PrePostAnnotationSecurityMetadataSource;
 import org.springframework.security.authorization.method.PrePostMethodInterceptor;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 
 /**
  * @author Rob Winch
  * @since 5.0
  */
-@Configuration
-@EnableAspectJAutoProxy
+@EnableReactiveMethodSecurity
 public class ReactorSecurityMethodConfiguration {
 
-	@Bean
-	@Role(BeanDefinition.ROLE_INFRASTRUCTURE)
-	public MethodSecurityMetadataSourceAdvisor methodSecurityInterceptor(AbstractMethodSecurityMetadataSource source) throws Exception {
-		return new MethodSecurityMetadataSourceAdvisor("securityMethodInterceptor", source, "methodMetadataSource");
-	}
-
-	@Bean
-	public PrePostAnnotationSecurityMetadataSource methodMetadataSource() {
-		ExpressionBasedAnnotationAttributeFactory attributeFactory = new ExpressionBasedAnnotationAttributeFactory(
-				new DefaultMethodSecurityExpressionHandler());
-		return new PrePostAnnotationSecurityMetadataSource(attributeFactory);
-	}
-
-	@Bean
-	public PrePostMethodInterceptor securityMethodInterceptor(AbstractMethodSecurityMetadataSource source, MethodSecurityExpressionHandler handler) {
-
-		ExpressionBasedPostInvocationAdvice postAdvice = new ExpressionBasedPostInvocationAdvice(
-				handler);
-		ExpressionBasedPreInvocationAdvice preAdvice = new ExpressionBasedPreInvocationAdvice();
-		preAdvice.setExpressionHandler(handler);
-
-		PrePostMethodInterceptor result = new PrePostMethodInterceptor(source);
-		result.setPostAdvice(postAdvice);
-		result.setPreAdvice(preAdvice);
-		return result;
-	}
-
-	@Bean
-	public DefaultMethodSecurityExpressionHandler methodSecurityExpressionHandler() {
-		return new DefaultMethodSecurityExpressionHandler();
-	}
 }
