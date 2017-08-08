@@ -39,7 +39,7 @@ public class DelegateMessageService implements MessageService {
 	}
 
 	@Override
-	@PostAuthorize("returnObject.to == authentication?.name")
+	@PostAuthorize("returnObject?.contains(authentication?.name)")
 	public Mono<String> postAuthorizeFindById(
 			long id) {
 		return delegate.postAuthorizeFindById(id);

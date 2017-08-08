@@ -29,10 +29,13 @@ import org.springframework.security.access.prepost.PostInvocationAttribute;
 import org.springframework.security.access.prepost.PostInvocationAuthorizationAdvice;
 import org.springframework.security.access.prepost.PreInvocationAttribute;
 import org.springframework.security.access.prepost.PreInvocationAuthorizationAdvice;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.util.Assert;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 
 import java.lang.reflect.Method;
 import java.util.Collection;
@@ -42,6 +45,9 @@ import java.util.Collection;
  * @since 5.0
  */
 public class PrePostMethodInterceptor implements MethodInterceptor {
+	private Authentication anonymous = new AnonymousAuthenticationToken("key", "anonymous",
+			AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+
 	private final MethodSecurityMetadataSource attributeSource;
 
 	private PostInvocationAuthorizationAdvice postAdvice;
@@ -76,7 +82,8 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 
 		PreInvocationAttribute preAttr = findPreInvocationAttribute(attributes);
 		return Mono.currentContext()
-			.flatMap( cxt -> cxt.getOrDefault(Authentication.class, Mono.<Authentication>empty()))
+			.defaultIfEmpty(Context.empty())
+			.flatMap( cxt -> cxt.getOrDefault(Authentication.class, Mono.just(anonymous)))
 			.filter( auth -> this.preAdvice.before(auth, invocation, preAttr))
 			.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")))
 			.flatMap( auth -> invoke(auth, invocation, attributes));
