@@ -18,6 +18,7 @@ package org.springframework.security.authorization.method;
 
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.reactivestreams.Publisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.ConfigAttribute;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -34,6 +35,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.util.Assert;
 import reactor.core.Exceptions;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.context.Context;
 
@@ -76,31 +78,44 @@ public class PrePostMethodInterceptor implements MethodInterceptor {
 	public Object invoke(final MethodInvocation invocation)
 			throws Throwable {
 		Method method = invocation.getMethod();
+		Class<?> returnType = method.getReturnType();
 		Class<?> targetClass = invocation.getThis().getClass();
 		Collection<ConfigAttribute> attributes = this.attributeSource
 				.getAttributes(method, targetClass);
 
 		PreInvocationAttribute preAttr = findPreInvocationAttribute(attributes);
-		return Mono.currentContext()
+		Mono<Authentication> toInvoke = Mono.currentContext()
 			.defaultIfEmpty(Context.empty())
 			.flatMap( cxt -> cxt.getOrDefault(Authentication.class, Mono.just(anonymous)))
 			.filter( auth -> this.preAdvice.before(auth, invocation, preAttr))
-			.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")))
-			.flatMap( auth -> invoke(auth, invocation, attributes));
-	}
+			.switchIfEmpty(Mono.error(new AccessDeniedException("Denied")));
 
-	private Mono<?> invoke(final Authentication auth, final MethodInvocation invocation, Collection<ConfigAttribute> attributes) {
-		Mono<?> result = performInvoke(invocation);
+
 		PostInvocationAttribute attr = findPostInvocationAttribute(attributes);
-		if(attr == null) {
-			return result;
+
+		if(Mono.class.isAssignableFrom(returnType)) {
+			return toInvoke
+					.flatMap( auth -> this.<Mono<?>>proceed(invocation)
+						.map( r -> attr == null ? r : this.postAdvice.after(auth, invocation, attr, r))
+					);
 		}
-		return result.map( r -> this.postAdvice.after(auth, invocation, attr, r));
+
+		if(Flux.class.isAssignableFrom(returnType)) {
+			return toInvoke
+					.flatMapMany( auth -> this.<Flux<?>>proceed(invocation)
+						.map( r -> attr == null ? r : this.postAdvice.after(auth, invocation, attr, r))
+					);
+		}
+
+		return toInvoke
+				.flatMapMany( auth -> Flux.from(this.<Publisher<?>>proceed(invocation))
+					.map( r -> attr == null ? r : this.postAdvice.after(auth, invocation, attr, r))
+				);
 	}
 
-	private Mono<?> performInvoke(final MethodInvocation invocation) {
+	private<T extends Publisher<?>> T proceed(final MethodInvocation invocation) {
 		try {
-			return (Mono<?>) invocation.proceed();
+			return (T) invocation.proceed();
 		} catch(Throwable throwable) {
 			throw Exceptions.propagate(throwable);
 		}
